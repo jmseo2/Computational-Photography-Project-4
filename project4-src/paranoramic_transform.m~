@@ -1,0 +1,58 @@
+function out = paranoramic_transform(hdr)
+    [n, n, dim] = size(hdr);
+    mid = floor(n / 2);
+    
+    normals = zeros(n, n, dim);
+    reflections = zeros(n, n, dim);
+    phi_theta = zeros(n, n, dim);
+    for i = 1:n
+        for j = 1:n
+            [x, y, z] = get_normal(j, i, mid);
+            normals(i, j, 1) = x;
+            normals(i, j, 2) = y;
+            normals(i, j, 3) = z;
+            
+            [x, y, z] = get_reflection(j, i, mid);
+            reflections(i, j, 1) = x;
+            reflections(i, j, 2) = y;
+            reflections(i, j, 3) = z;
+            
+            phi = atan2(y, x);
+            theta = acos(z);
+            
+            phi_theta(i, j, 1) = theta / (pi / 2);
+            phi_theta(i, j, 2) = (phi + pi) / (4 * pi);
+            phi_theta(i, j, 3) = 0;
+        end
+    end
+    
+    imshow(phi_theta);
+end
+
+function [x, y, z] = get_normal(col, row, mid)
+    x = (col - mid) / mid;
+    y = (row - mid) / mid;
+    if 1 - x^2 - y^2 < 0
+        x = 0;
+        y = 0;
+        z = 0;
+    else
+        z = sqrt(1 - x^2 - y^2);
+    end
+end
+
+function [x, y, z] = get_reflection(col, row, mid)
+    [nx, ny, nz] = get_normal(col, row, mid);
+    N = [nx, ny, nz];
+    if nx == 0 && ny == 0 && nz == 0
+        x = 0;
+        y = 0;
+        z = 0;
+    else
+        V = [0; 0; -1];
+        R = V - 2 * N * V * N.';
+        x = R(1, 1) / norm(R);
+        y = R(2, 1) / norm(R);
+        z = R(3, 1) / norm(R);
+    end
+end
